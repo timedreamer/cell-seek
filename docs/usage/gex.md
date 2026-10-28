@@ -355,8 +355,6 @@ load `R/4.4.0` in the compute session before starting cell-seek. Packages load
 normally through R; cell-seek does not install them automatically.
 SoupX needs no dedicated Docker build, SIF file or `--sif-cache` setting.
 Other workflow steps retain their existing container requirements.
-See the [development verification record](../development/20261027_soupx_integration.md)
-for completed local checks and pending Biowulf verification.
 
 ## 3. Example
 

@@ -19,7 +19,7 @@
     "soupx": {
         "threads": "2",
         "mem": "64g",
-        "time": "0-04:00:00"
+        "time": "0-02:00:00"
     },
     "seuratQC": {
         "threads": "8",
