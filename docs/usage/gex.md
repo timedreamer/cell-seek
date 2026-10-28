@@ -20,6 +20,7 @@ $ cell-seek run [--help] \
       [--sif-cache SIF_CACHE] [--singularity-cache SINGULARITY_CACHE] \
       [--silent] [--threads THREADS] [--tmp-dir TMP_DIR] \
       [--aggregate {{mapped, none}}] [--exclude-introns] \
+      [--ambient-rna-method {none,soupx}] \
       [--filter FILTER] [--metadata METADATA] [--create-bam] \
       [--rename RENAME] [--forcecells FORCECELLS] \
       --input INPUT [INPUT ...] \
@@ -316,6 +317,46 @@ Each of the following arguments are optional, and do not need to be provided.
 > Shows command's synopsis, help message, and an example command
 >
 > ***Example:*** `--help`
+
+### Optional ambient RNA correction
+
+`--ambient-rna-method soupx` corrects each capture independently before the
+existing Seurat sample QC and integration. The default, `none`, uses the original
+Cell Ranger matrix. Use a fresh output directory when changing methods.
+
+SoupX requires GEX-only version-3 raw and filtered matrices, with matching feature
+IDs and annotations in the same order, and graph clusters covering the filtered
+barcodes in matrix order. Imported data may use
+`analysis/clustering/gene_expression_graphclust/clusters.csv` or
+`analysis/clustering/graphclust/clusters.csv`. Inputs should contain only Gene
+Expression features.
+Keep independent captures as separate samples, even if they share biological
+metadata. Sequencing lanes from the same capture may be processed together.
+
+Omit `--aggregate` when selecting SoupX: both `--aggregate none` and
+`--aggregate mapped` are rejected, including for one sample. Seurat integration
+still runs for multiple samples. Automatic estimation uses SoupX defaults and
+seed 1234; failed estimation stops processing without falling back to original
+counts. Very small or homogeneous samples may not support automatic estimation.
+
+Each sample produces `soupx/<sample>/filtered_feature_bc_matrix/` with gzipped
+matrix, feature and barcode files, plus `soupx_summary.tsv`, `sessionInfo.txt`
+and the automatic-estimation diagnostic plot, `soupx_estimation.pdf`.
+The corrected integer counts preserve features and filtered barcodes, including
+zeros. Cell Ranger outputs remain unchanged. Seurat runs QC once on the selected
+matrix; its metadata and report identify the matrix source. With SoupX enabled,
+“pre-filter” means after correction and before Seurat cell filtering. QC settings
+are unchanged, but thresholds derived from counts and retained cells may differ.
+
+Before running, install compatible **SoupX, DropletUtils and optparse** packages
+under **R/4.4.0** in a library that R normally searches. Seurat remains an existing
+GEX prerequisite. Slurm jobs load the configured R module; for `--mode local`,
+load `R/4.4.0` in the compute session before starting cell-seek. Packages load
+normally through R; cell-seek does not install them automatically.
+SoupX needs no dedicated Docker build, SIF file or `--sif-cache` setting.
+Other workflow steps retain their existing container requirements.
+See the [development verification record](../development/20261027_soupx_integration.md)
+for completed local checks and pending Biowulf verification.
 
 ## 3. Example
 
