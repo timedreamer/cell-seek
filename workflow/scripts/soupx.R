@@ -13,7 +13,7 @@ write_soupx_result <- function(corrected, original, annotations, rho, sample, ou
     features <- annotations$features
     DropletUtils::write10xCounts(
         file.path(output, "filtered_feature_bc_matrix"), corrected,
-        type = "mtx", version = "3", overwrite = TRUE,
+        type = "sparse", version = "3", overwrite = TRUE,
         gene.id = features[[1]], gene.symbol = features[[2]], gene.type = features[[3]],
         barcodes = annotations$barcodes
     )

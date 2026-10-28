@@ -58,8 +58,10 @@ python -c 'import pulp; print(pulp.__version__)'
 ```
 
 These pins reproduce the primary tool versions; this is not a complete lock of
-all transitive dependencies. Install future local development tools into this
-environment while preserving the Python, Snakemake, and PuLP pins.
+all transitive dependencies. Keep Python development tools in this environment
+and preserve the Python, Snakemake, and PuLP pins. The user explicitly requested
+using the existing system R for local R development; that exception is documented
+below.
 
 For commands that do not rely on an already activated terminal:
 
@@ -71,6 +73,58 @@ mamba run -n cellseek-dev python -B \
 The repository's `python/3.8` module entry is separate from the launcher runtime.
 The Biowulf session actually reported Python 3.9.15, so the local environment was
 aligned with that version rather than changing the pipeline's module settings.
+
+## Existing system R for local development
+
+On 2026-10-27, the user authorized using the existing R installation and adding
+missing development packages to its user library, rather than installing R
+inside `cellseek-dev`.
+
+| Component | Verified version or location |
+| --- | --- |
+| R | 4.6.1, native Apple Silicon |
+| Executable | `/usr/local/bin/Rscript` |
+| R home | `/Library/Frameworks/R.framework/Resources` |
+| User library | `/Users/huangj21/Library/R/arm64/4.6/library` |
+| SoupX, already installed | 1.6.2 |
+| Seurat, already installed | 5.5.1 |
+| DropletUtils, newly installed | 1.32.1 |
+| optparse, newly installed | 1.8.2 |
+| flextable, newly installed | 0.10.3 |
+| officer, installed as a dependency | 0.7.7 |
+
+`mamba run -n cellseek-dev Rscript` currently resolves to the system executable;
+there is no R executable installed in the conda environment itself. Use the
+absolute Rscript path to make this choice explicit in local checks.
+
+The installation used CRAN and Bioconductor 3.23 macOS ARM binary packages,
+without requesting a broad update of existing packages. Equivalent installation
+commands for the same R/user-library setup are:
+
+```bash
+/usr/local/bin/Rscript --vanilla -e \
+  'install.packages(c("optparse", "flextable"), lib="/Users/huangj21/Library/R/arm64/4.6/library", repos="https://cloud.r-project.org", type="binary")'
+
+/usr/local/bin/Rscript --vanilla -e \
+  'options(repos=c(CRAN="https://cloud.r-project.org")); BiocManager::install("DropletUtils", lib="/Users/huangj21/Library/R/arm64/4.6/library", ask=FALSE, update=FALSE, type="binary")'
+```
+
+These repository-based commands do not pin future downloads to the versions
+listed above. Record resolved versions when reproducing the environment.
+SoupX and Seurat retained their pre-existing versions after installation.
+
+Verification passed: loading the required packages; writing a synthetic 2-by-2
+sparse matrix with `DropletUtils::write10xCounts(version="3")` and rereading it
+with `Seurat::Read10X()` while preserving counts, symbols, and barcodes; checking
+the exported feature IDs/types; parsing an argument with optparse; and creating
+a flextable object. Temporary matrix files were removed after the check. A full
+HTML report was not rendered.
+
+This R environment supports local script and matrix-handoff checks. It differs
+from the configured Biowulf R/4.4.0 module; actual Linux container/module and
+end-to-end workflow verification still belongs on Biowulf. Installing these
+packages does not demonstrate that SoupX correction or the cell-seek workflow
+has run successfully.
 
 ## GitHub and local checkout setup
 

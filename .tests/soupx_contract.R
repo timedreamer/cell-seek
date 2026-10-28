@@ -72,7 +72,7 @@ dir.create(outs, recursive=TRUE)
 tiny <- Matrix(matrix(rep(1:3, each=3), nrow=3), sparse=TRUE)
 dimnames(tiny) <- dimnames(original)
 for (name in c("raw_feature_bc_matrix", "filtered_feature_bc_matrix")) {
-  DropletUtils::write10xCounts(file.path(outs, name), tiny, type="mtx", version="3",
+  DropletUtils::write10xCounts(file.path(outs, name), tiny, type="sparse", version="3",
                               gene.id=rownames(tiny), gene.symbol=annotations$features$V2)
 }
 cluster_dir <- file.path(outs, "analysis", "clustering", "gene_expression_graphclust")
